@@ -9,10 +9,23 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://book-management-system-frontend-self.vercel.app"
+];
+
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g., mobile apps, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 const PORT = process.env.PORT;
