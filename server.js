@@ -167,8 +167,19 @@ app.delete("/books/:id", authenticateUser, async (req, res) => {
 // 🔍 Search book
 app.get("/books/search", authenticateUser, async (req, res) => {
   const keyword = req.query.q || "";
-  const data = await books.find({ title: { $regex: keyword, $options: "i" } }).toArray();
-  res.json(data);
+  try {
+    const data = await books.find({
+      $or: [
+        { title: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } }
+      ]
+    }).toArray();
+
+    res.json(data);
+  } catch (err) {
+    console.error("Search Error:", err);
+    res.status(500).send("Failed to search books");
+  }
 });
 
 // 📖 Paginated book view
