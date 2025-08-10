@@ -107,11 +107,13 @@ app.post("/login", async (req, res) => {
 
 // ✅ Add book (title & url provided by user)
 app.post("/books", authenticateUser, async (req, res) => {
-  const { title, url } = req.body;
+  const { title, url, description } = req.body;
   if (!title) return res.status(400).send("Title is required");
 
   try {
     const user = await users.findOne({ email: req.user.email });
+    if (!user) return res.status(404).send("User not found");
+
     const bookData = {
       userId: user._id,
       title,
@@ -119,6 +121,7 @@ app.post("/books", authenticateUser, async (req, res) => {
     };
 
     if (url) bookData.url = url;
+    if (description) bookData.description = description;
 
     const result = await books.insertOne(bookData);
     res.json({ success: true, bookId: result.insertedId });
@@ -130,16 +133,19 @@ app.post("/books", authenticateUser, async (req, res) => {
 
 // ✅ Update book
 app.put("/books/:id", authenticateUser, async (req, res) => {
-  const { title, url } = req.body;
+  const { title, url, description } = req.body;
+
   try {
     const updateFields = {};
     if (title) updateFields.title = title;
     if (url) updateFields.url = url;
+    if (description) updateFields.description = description;
 
     await books.updateOne(
       { _id: new ObjectId(req.params.id) },
       { $set: updateFields }
     );
+
     res.send("Updated");
   } catch (err) {
     console.error("Update Error:", err);
